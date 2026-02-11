@@ -368,11 +368,7 @@ const App: React.FC = () => {
 
       {/* Footer */}
       <footer className="py-8 px-6 text-center text-gray-400 text-xs border-t border-gray-100 mt-auto">
-<<<<<<< Updated upstream
-        <p>&copy; 2025 ProShot AI Photographer. Powered by Gemini 2.5 Flash Image.</p>
-=======
-        <p>&copy; {new Date().getFullYear()} ProShot AI Photographer. Powered by Gemini 2.0 Flash Lite.</p>
->>>>>>> Stashed changes
+        <p>&copy; {new Date().getFullYear()} ProShot AI Photographer. Powered by Gemini 2.5 Flash Image.</p>
         <div className="mt-2 flex justify-center gap-4">
           <a href="#" className="hover:text-gray-600">Privacy Policy</a>
           <a href="#" className="hover:text-gray-600">Terms of Service</a>
