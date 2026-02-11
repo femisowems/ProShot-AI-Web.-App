@@ -13,7 +13,8 @@ import {
   RotateCcw,
   Send,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -41,6 +42,7 @@ const App: React.FC = () => {
 
   const handleStyleSelect = (style: HeadshotStyle) => {
     setSelectedStyle(style);
+    setError(null);
   };
 
   const handleGenerate = async () => {
@@ -54,9 +56,8 @@ const App: React.FC = () => {
       const result = await generateHeadshot(sourceImage, selectedStyle.prompt);
       setResultImage(result);
       setStep(AppStep.RESULT);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to generate headshot. Please try again.");
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred.");
       setStep(AppStep.STYLE);
     } finally {
       setIsLoading(false);
@@ -73,9 +74,8 @@ const App: React.FC = () => {
       const result = await editHeadshot(resultImage, editPrompt);
       setResultImage(result);
       setEditPrompt('');
-    } catch (err) {
-      console.error(err);
-      setError("Failed to edit image. Try a different prompt.");
+    } catch (err: any) {
+      setError(err.message || "Failed to edit image.");
     } finally {
       setIsLoading(false);
     }
@@ -187,6 +187,13 @@ const App: React.FC = () => {
               </div>
             </div>
 
+            {error && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex gap-3 items-start animate-in fade-in slide-in-from-top-2">
+                <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                <div className="text-sm text-red-800 font-medium">{error}</div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {HEADSHOT_STYLES.map((style) => (
                 <div 
@@ -215,11 +222,11 @@ const App: React.FC = () => {
 
             <div className="flex justify-center mt-8">
               <button
-                disabled={!selectedStyle}
+                disabled={!selectedStyle || isLoading}
                 onClick={handleGenerate}
                 className="flex items-center gap-2 bg-indigo-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-indigo-100 transition-all hover:-translate-y-1"
               >
-                <Sparkles className="w-5 h-5" />
+                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
                 Generate My Headshot
               </button>
             </div>
@@ -243,7 +250,7 @@ const App: React.FC = () => {
               <div className="flex flex-col gap-2">
                 <p className="text-gray-500 animate-pulse">Adjusting studio lighting</p>
                 <p className="text-gray-500 animate-pulse delay-75">Swapping casual attire for professional suit</p>
-                <p className="text-gray-500 animate-pulse delay-150">Enhancing resolution to 8K</p>
+                <p className="text-gray-500 animate-pulse delay-150">Enhancing resolution to HD</p>
               </div>
             </div>
           </div>
@@ -328,6 +335,7 @@ const App: React.FC = () => {
                 <div className="mt-auto">
                   {error && (
                     <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-xl flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
                       <span>{error}</span>
                     </div>
                   )}
@@ -347,7 +355,7 @@ const App: React.FC = () => {
                     </button>
                   </div>
                   <p className="mt-3 text-xs text-gray-400 text-center">
-                    AI updates usually take 3-5 seconds to process.
+                    AI updates usually take 5-10 seconds to process.
                   </p>
                 </div>
               </div>
@@ -358,7 +366,7 @@ const App: React.FC = () => {
 
       {/* Footer */}
       <footer className="py-8 px-6 text-center text-gray-400 text-xs border-t border-gray-100 mt-auto">
-        <p>&copy; {new Date().getFullYear()} ProShot AI Photographer. Powered by Gemini 2.5 Flash Image.</p>
+        <p>&copy; 2025 ProShot AI Photographer. Powered by Gemini 2.5 Flash Image.</p>
         <div className="mt-2 flex justify-center gap-4">
           <a href="#" className="hover:text-gray-600">Privacy Policy</a>
           <a href="#" className="hover:text-gray-600">Terms of Service</a>
