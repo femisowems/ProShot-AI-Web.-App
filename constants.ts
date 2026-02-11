@@ -29,5 +29,33 @@ export const HEADSHOT_STYLES: HeadshotStyle[] = [
     description: 'Moody, high-contrast lighting with a dark professional background.',
     previewUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop',
     prompt: 'Executive dramatic headshot, dark charcoal textured background, high contrast Rembrandt lighting, sharp professional focus, wearing a dark suit, powerful and sophisticated atmosphere.'
+  },
+  {
+    id: 'studio-minimal',
+    name: 'Studio Minimal',
+    description: 'Crisp white background with high-key professional lighting.',
+    previewUrl: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400&h=400&fit=crop',
+    prompt: 'Professional headshot with a pure white seamless background, high-key bright soft lighting, wearing smart casual business attire, clean and approachable look, high resolution.'
+  },
+  {
+    id: 'warm-executive',
+    name: 'Warm Executive',
+    description: 'Blurred bookshelf background with warm, inviting tones.',
+    previewUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=400&fit=crop',
+    prompt: 'Professional executive headshot, blurred warm library or bookshelf background, soft warm lighting, wearing a suit or blazer, trustworthy and experienced look, detailed facial features.'
+  },
+  {
+    id: 'creative-color',
+    name: 'Creative Color',
+    description: 'Solid bold color background with artistic studio lighting.',
+    previewUrl: 'https://images.unsplash.com/photo-1618077360395-f3068be8e001?w=400&h=400&fit=crop',
+    prompt: 'Artistic professional headshot, solid vibrant color background (blue or purple), dramatic colorful gel lighting, wearing creative professional attire, sharp focus, modern design aesthetic.'
+  },
+  {
+    id: 'black-white',
+    name: 'Black & White',
+    description: 'Timeless high-contrast black and white portrait.',
+    previewUrl: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=400&h=400&fit=crop',
+    prompt: 'Classic black and white professional headshot, simple neutral background, high contrast lighting, timeless cinematic look, detailed grain, wearing classic business attire.'
   }
 ];
