@@ -13,9 +13,34 @@ import {
     Send,
     Loader2,
     CheckCircle2,
-    AlertCircle
+    AlertCircle,
+    RefreshCw
 } from 'lucide-react';
 import { ImageUpload } from '../components/ImageUpload';
+
+const SUGGESTED_PROMPTS = [
+    "Make me look more confident and approachable",
+    "Change the background to a blurred modern office",
+    "Fix the stray hairs on the top of my head",
+    "Make the lighting warmer and more golden",
+    "Adjust my suit color to a deep navy blue",
+    "Brighten my eyes and whiten teeth slightly",
+    "Remove the glare from my glasses",
+    "Make my skin tone look more natural",
+    "Turn this into a black and white photo",
+    "Add a subtle smile to my expression",
+    "Make the background pure white for LinkedIn",
+    "Soften the shadows on my face",
+    "Give me a fresh haircut look",
+    "Change to a casual friday look",
+    "Make it look like taken outside in sunlight",
+    "Remove the wrinkles under my eyes"
+];
+
+const getRandomSuggestions = () => {
+    const shuffled = [...SUGGESTED_PROMPTS].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 4);
+};
 
 const Home: React.FC = () => {
     const [step, setStep] = useState<AppStep>(AppStep.UPLOAD);
@@ -24,6 +49,7 @@ const Home: React.FC = () => {
     const [resultImage, setResultImage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [editPrompt, setEditPrompt] = useState('');
+    const [currentSuggestions, setCurrentSuggestions] = useState<string[]>(getRandomSuggestions());
     const [error, setError] = useState<string | null>(null);
 
     const handleStyleSelect = (style: HeadshotStyle) => {
@@ -75,6 +101,11 @@ const Home: React.FC = () => {
         setSelectedStyle(null);
         setResultImage(null);
         setError(null);
+        setCurrentSuggestions(getRandomSuggestions());
+    };
+
+    const handleRefreshSuggestions = () => {
+        setCurrentSuggestions(getRandomSuggestions());
     };
 
     return (
@@ -280,11 +311,20 @@ const Home: React.FC = () => {
                         {/* AI Editor Panel */}
                         <div className="flex flex-col gap-6">
                             <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 h-full flex flex-col">
-                                <div className="flex items-center gap-2 mb-6">
-                                    <div className="p-2 bg-amber-50 rounded-lg">
-                                        <Sparkles className="text-amber-600 w-5 h-5" />
+                                <div className="flex justify-between items-center mb-6">
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-2 bg-amber-50 rounded-lg">
+                                            <Sparkles className="text-amber-600 w-5 h-5" />
+                                        </div>
+                                        <h3 className="text-xl font-bold text-gray-900">AI Refinement Chat</h3>
                                     </div>
-                                    <h3 className="text-xl font-bold text-gray-900">AI Refinement Chat</h3>
+                                    <button
+                                        onClick={handleRefreshSuggestions}
+                                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all"
+                                        title="Get new suggestions"
+                                    >
+                                        <RefreshCw className="w-4 h-4" />
+                                    </button>
                                 </div>
 
                                 <div className="flex-1 space-y-4 mb-8">
@@ -292,13 +332,13 @@ const Home: React.FC = () => {
                                         Not quite perfect? You can refine this image using natural language. Try saying things like:
                                     </p>
                                     <ul className="space-y-2">
-                                        {['"Make the background slightly darker"', '"Add a blue necktie"', '"Increase the warmth of the lighting"', '"Make my smile broader"'].map((suggestion, i) => (
+                                        {currentSuggestions.map((suggestion, i) => (
                                             <li
                                                 key={i}
-                                                onClick={() => setEditPrompt(suggestion.replace(/"/g, ''))}
+                                                onClick={() => setEditPrompt(suggestion)}
                                                 className="text-indigo-600 text-sm font-medium bg-indigo-50/50 p-3 rounded-xl cursor-pointer hover:bg-indigo-100 transition-colors border border-indigo-100/50"
                                             >
-                                                {suggestion}
+                                                "{suggestion}"
                                             </li>
                                         ))}
                                     </ul>
