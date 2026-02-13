@@ -197,7 +197,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({ onCaptur
                 </div>
 
                 {/* Footer / Controls */}
-                <div className="p-6 bg-white space-y-4 flex-1 flex flex-col justify-center pb-[env(safe-area-inset-bottom)]">
+                <div className="p-6 bg-white space-y-4 flex-1 flex flex-col justify-center pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
 
                     {/* Helper Text */}
                     {cameraState === 'live' && (

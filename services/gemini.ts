@@ -3,7 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 
 const MODEL_NAME = 'gemini-2.5-flash-image';
 
-export async function generateHeadshot(base64Image: string, stylePrompt: string): Promise<string> {
+export async function generateHeadshot(base64Image: string, stylePrompt: string, promptModifier: string = ''): Promise<string> {
   const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
   try {
@@ -18,7 +18,7 @@ export async function generateHeadshot(base64Image: string, stylePrompt: string)
             },
           },
           {
-            text: `Please transform this casual photo into a professional headshot. Use the following style description: ${stylePrompt}. 
+            text: `Please transform this casual photo into a professional headshot. Use the following style description: ${stylePrompt}. ${promptModifier ? `Variation focus: ${promptModifier}.` : ''} 
             
             IMPORTANT:
             - Maintain the person's exact facial features and likeness (identity preservation is critical).

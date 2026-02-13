@@ -1,64 +1,71 @@
+
 import React, { useState } from 'react';
-import { AppStep, HeadshotStyle } from '../types';
-import { HEADSHOT_STYLES } from '../constants';
-import { generateHeadshot, editHeadshot } from '../services/gemini';
-import { resizeImage } from '../utils/image';
 import {
+    Upload,
     Camera,
-    ChevronRight,
     Sparkles,
-    ArrowLeft,
-    Download,
-    RotateCcw,
-    Send,
+    Image as ImageIcon,
     Loader2,
+    ChevronRight,
+    ArrowLeft,
     CheckCircle2,
     AlertCircle,
     RefreshCw,
     UserCheck,
     Aperture,
-    Wand2
+    Wand2,
+    Download,
+    Send,
+    RotateCcw
 } from 'lucide-react';
 import { ImageUpload } from '../components/ImageUpload';
+import { HeadshotGallery, GeneratedHeadshot } from '../components/HeadshotGallery';
+import { HEADSHOT_STYLES } from '../constants';
+import { HeadshotStyle } from '../types';
+import { generateHeadshot, editHeadshot } from '../services/gemini';
+import { resizeImage } from '../utils/image';
+import { Footer } from '../components/Footer';
 
 const SUGGESTED_PROMPTS = [
     "Make me look more confident and approachable",
-    "Change the background to a blurred modern office",
-    "Fix the stray hairs on the top of my head",
-    "Make the lighting warmer and more golden",
-    "Adjust my suit color to a deep navy blue",
-    "Brighten my eyes and whiten teeth slightly",
-    "Remove the glare from my glasses",
-    "Make my skin tone look more natural",
-    "Turn this into a black and white photo",
-    "Add a subtle smile to my expression",
-    "Make the background pure white for LinkedIn",
-    "Soften the shadows on my face",
-    "Give me a fresh haircut look",
-    "Change to a casual friday look",
-    "Make it look like taken outside in sunlight",
-    "Remove the wrinkles under my eyes"
+    "Change the background to a modern office blur",
+    "Fix the lighting to be more even",
+    "Make my suit dark navy blue",
+    "Remove the glare from my glasses"
 ];
 
-const getRandomSuggestions = () => {
-    const shuffled = [...SUGGESTED_PROMPTS].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 4);
-};
+enum AppStep {
+    UPLOAD = 'upload',
+    STYLE = 'style',
+    GENERATING = 'generating',
+    RESULT = 'result'
+}
 
 const Home: React.FC = () => {
     const [step, setStep] = useState<AppStep>(AppStep.UPLOAD);
     const [sourceImage, setSourceImage] = useState<string | null>(null);
     const [selectedStyle, setSelectedStyle] = useState<HeadshotStyle | null>(null);
-    const [resultImage, setResultImage] = useState<string | null>(null);
+    const [resultImage, setResultImage] = useState<string | null>(null); // Kept for backward compat if needed, but primary is 'results'
     const [isLoading, setIsLoading] = useState(false);
     const [editPrompt, setEditPrompt] = useState('');
-    const [currentSuggestions, setCurrentSuggestions] = useState<string[]>(getRandomSuggestions());
+    const [currentSuggestions, setCurrentSuggestions] = useState<string[]>(() => {
+        const shuffled = [...SUGGESTED_PROMPTS].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, 3);
+    });
     const [error, setError] = useState<string | null>(null);
     const [cropStatus, setCropStatus] = useState<boolean | null>(null);
 
+    // 4x Variation State
+    const [results, setResults] = useState<GeneratedHeadshot[]>([]);
+    const [selectedId, setSelectedId] = useState<string | null>(null);
+
+    const handleRefreshSuggestions = () => {
+        const shuffled = [...SUGGESTED_PROMPTS].sort(() => 0.5 - Math.random());
+        setCurrentSuggestions(shuffled.slice(0, 3));
+    };
+
     const handleStyleSelect = (style: HeadshotStyle) => {
         setSelectedStyle(style);
-        setError(null);
     };
 
     const handleGenerate = async () => {
@@ -69,28 +76,60 @@ const Home: React.FC = () => {
         setError(null);
 
         try {
-            const optimizedImage = await resizeImage(sourceImage, 1024, 1024);
-            const result = await generateHeadshot(optimizedImage, selectedStyle.prompt);
-            setResultImage(result);
+            // 4x Parallel Generation
+            const modifiers = [
+                "soft studio lighting, balanced contrast",
+                "neutral professional lighting, sharp focus",
+                "high contrast dramatic lighting",
+                "warm ambient lighting, soft bokeh"
+            ];
+
+            const promises = modifiers.map(modifier =>
+                generateHeadshot(sourceImage, selectedStyle.prompt, modifier)
+            );
+
+            const generatedImages = await Promise.all(promises);
+
+            const newResults: GeneratedHeadshot[] = generatedImages.map(url => ({
+                id: crypto.randomUUID(),
+                url
+            }));
+
+            setResults(newResults);
+            if (newResults.length > 0) {
+                setSelectedId(newResults[0].id);
+            }
+
             setStep(AppStep.RESULT);
         } catch (err: any) {
-            setError(err.message || "An unexpected error occurred.");
-            setStep(AppStep.STYLE);
+            console.error(err);
+            setError(err.message || "Failed to generate headshots. Please try again.");
+            setStep(AppStep.STYLE); // Go back on error
         } finally {
             setIsLoading(false);
         }
     };
 
     const handleEdit = async () => {
-        if (!resultImage || !editPrompt.trim()) return;
+        if (!selectedId || !editPrompt.trim()) return;
+        const currentResult = results.find(r => r.id === selectedId);
+        if (!currentResult) return;
 
         setIsLoading(true);
         setError(null);
 
         try {
-            const optimizedImage = await resizeImage(resultImage, 1024, 1024);
-            const result = await editHeadshot(optimizedImage, editPrompt);
-            setResultImage(result);
+            // Note: Editor only edits one, so we might want to add the edited version to the list or replace the current one
+            // For now, let's append the edited version as a new variation and select it
+            const newImage = await editHeadshot(currentResult.url, editPrompt);
+
+            const editedHeadshot: GeneratedHeadshot = {
+                id: crypto.randomUUID(),
+                url: newImage
+            };
+
+            setResults(prev => [editedHeadshot, ...prev]);
+            setSelectedId(editedHeadshot.id);
             setEditPrompt('');
         } catch (err: any) {
             setError(err.message || "Failed to edit image.");
@@ -103,15 +142,11 @@ const Home: React.FC = () => {
         setStep(AppStep.UPLOAD);
         setSourceImage(null);
         setSelectedStyle(null);
-        setResultImage(null);
-        setResultImage(null);
+        setResults([]);
+        setSelectedId(null);
         setError(null);
         setCropStatus(null);
-        setCurrentSuggestions(getRandomSuggestions());
-    };
-
-    const handleRefreshSuggestions = () => {
-        setCurrentSuggestions(getRandomSuggestions());
+        handleRefreshSuggestions();
     };
 
     return (
@@ -211,6 +246,27 @@ const Home: React.FC = () => {
                             </div>
                         )}
 
+                        {/* Smart Crop Feedback */}
+                        {sourceImage && (
+                            <div className="flex justify-center -mt-4 mb-2">
+                                {cropStatus === true ? (
+                                    <div className="bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 border border-green-100 animate-in fade-in slide-in-from-top-2">
+                                        <div className="bg-green-100 p-1 rounded-full">
+                                            <Sparkles className="w-3 h-3 text-green-600" />
+                                        </div>
+                                        Auto-framed for best results
+                                    </div>
+                                ) : cropStatus === false ? (
+                                    <div className="bg-yellow-50 text-yellow-700 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 border border-yellow-100 animate-in fade-in slide-in-from-top-2">
+                                        <div className="bg-yellow-100 p-1 rounded-full">
+                                            <AlertCircle className="w-3 h-3 text-yellow-600" />
+                                        </div>
+                                        No face detected — using original image
+                                    </div>
+                                ) : null}
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                             {HEADSHOT_STYLES.map((style) => (
                                 <div
@@ -262,126 +318,139 @@ const Home: React.FC = () => {
                             </div>
                         </div>
                         <div className="text-center space-y-4">
-                            <h2 className="text-2xl font-bold text-gray-900">Polishing your photos...</h2>
+                            <h2 className="text-2xl font-bold text-gray-900">Generating 4 variations...</h2>
                             <div className="flex flex-col gap-2">
-                                <p className="text-gray-500 animate-pulse">Adjusting studio lighting</p>
-                                <p className="text-gray-500 animate-pulse delay-75">Swapping casual attire for professional suit</p>
-                                <p className="text-gray-500 animate-pulse delay-150">Enhancing resolution to HD</p>
+                                <p className="text-gray-500 animate-pulse">Creating different lighting setups</p>
+                                <p className="text-gray-500 animate-pulse delay-75">Adjusting background depth</p>
+                                <p className="text-gray-500 animate-pulse delay-150">Polishing details</p>
+                            </div>
+
+                            {/* Skeleton Grid for Waiting State */}
+                            <div className="grid grid-cols-2 gap-4 mt-8 opacity-50 max-w-sm mx-auto">
+                                {[1, 2, 3, 4].map(placeholder => (
+                                    <div key={placeholder} className="aspect-square bg-gray-100 rounded-xl animate-pulse"></div>
+                                ))}
                             </div>
                         </div>
                     </div>
                 )}
 
-                {step === AppStep.RESULT && resultImage && (
-                    <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-10 animate-in fade-in duration-700">
-                        {/* Image Preview Card */}
-                        <div className="space-y-6">
-                            <div className="bg-white p-2 rounded-3xl shadow-2xl border border-gray-100 relative group overflow-hidden">
-                                <img
-                                    src={resultImage}
-                                    className={`w-full aspect-[4/5] object-cover rounded-[1.25rem] transition-opacity duration-300 ${isLoading ? 'opacity-50' : 'opacity-100'}`}
-                                    alt="Generated Headshot"
-                                />
+                {step === AppStep.RESULT && results.length > 0 && (
+                    <div className="w-full flex flex-col gap-8 animate-in fade-in duration-700 max-w-4xl mx-auto">
 
-                                {isLoading && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-white/30 backdrop-blur-[2px]">
-                                        <div className="bg-white p-4 rounded-2xl shadow-xl flex items-center gap-3">
-                                            <Loader2 className="w-6 h-6 text-indigo-600 animate-spin" />
-                                            <span className="font-semibold text-gray-700">Refining...</span>
-                                        </div>
-                                    </div>
+                        <div className="flex flex-col gap-8">
+                            {/* Selected Image Large Preview */}
+                            <div className="w-full max-w-md mx-auto aspect-[4/5] sm:aspect-square bg-white p-2 rounded-3xl shadow-2xl border border-gray-100 relative group overflow-hidden">
+                                {selectedId && (
+                                    <img
+                                        src={results.find(r => r.id === selectedId)?.url}
+                                        className="w-full h-full object-cover rounded-[1.25rem]"
+                                        alt="Selected Headshot"
+                                    />
                                 )}
-
-                                <div className="absolute bottom-6 left-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <a
-                                        href={resultImage}
-                                        download="proshot-headshot.png"
-                                        className="flex-1 flex items-center justify-center gap-2 bg-white/90 backdrop-blur py-3 rounded-xl font-semibold text-gray-900 hover:bg-white transition-colors"
-                                    >
-                                        <Download className="w-5 h-5" /> Download
-                                    </a>
-                                    <button
-                                        onClick={() => setStep(AppStep.STYLE)}
-                                        className="flex items-center justify-center w-14 bg-white/90 backdrop-blur rounded-xl text-gray-700 hover:bg-white transition-colors"
-                                    >
-                                        <RotateCcw className="w-5 h-5" />
-                                    </button>
-                                </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-indigo-50 p-4 rounded-2xl">
-                                    <p className="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-1">Style Selected</p>
-                                    <p className="text-indigo-900 font-semibold">{selectedStyle?.name}</p>
-                                </div>
-                                <div className="bg-gray-50 p-4 rounded-2xl">
-                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Dimensions</p>
-                                    <p className="text-gray-900 font-semibold">1024 x 1280 (HD)</p>
-                                </div>
+                            {/* Actions Bar */}
+                            <div className="flex flex-col sm:flex-row justify-center gap-4">
+                                <a
+                                    href={results.find(r => r.id === selectedId)?.url}
+                                    download={`proshot-headshot-${selectedId}.png`}
+                                    className={`flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg hover:-translate-y-1 ${!selectedId ? 'opacity-50 pointer-events-none' : ''}`}
+                                >
+                                    <Download className="w-5 h-5" />
+                                    Download Selected
+                                </a>
+                                <button
+                                    onClick={() => setStep(AppStep.STYLE)}
+                                    className="flex items-center justify-center px-6 py-3 rounded-xl font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                                >
+                                    <ArrowLeft className="w-4 h-4 mr-2" />
+                                    Change Style
+                                </button>
+                                <button
+                                    onClick={reset}
+                                    className="flex items-center justify-center px-6 py-3 rounded-xl font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                                >
+                                    <RotateCcw className="w-4 h-4 mr-2" />
+                                    Start Over
+                                </button>
                             </div>
-                        </div>
 
-                        {/* AI Editor Panel */}
-                        <div className="flex flex-col gap-6">
-                            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 h-full flex flex-col">
-                                <div className="flex justify-between items-center mb-6">
-                                    <div className="flex items-center gap-2">
-                                        <div className="p-2 bg-amber-50 rounded-lg">
-                                            <Sparkles className="text-amber-600 w-5 h-5" />
-                                        </div>
-                                        <h3 className="text-xl font-bold text-gray-900">AI Refinement Chat</h3>
-                                    </div>
-                                    <button
-                                        onClick={handleRefreshSuggestions}
-                                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all"
-                                        title="Get new suggestions"
-                                    >
-                                        <RefreshCw className="w-4 h-4" />
-                                    </button>
+                            {/* Gallery */}
+                            <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                                <div className="text-center mb-4">
+                                    <h3 className="font-bold text-gray-900">Variations</h3>
+                                    <p className="text-sm text-gray-500">Select your favorite look</p>
                                 </div>
+                                <HeadshotGallery
+                                    results={results}
+                                    selectedId={selectedId}
+                                    onSelect={setSelectedId}
+                                />
+                            </div>
 
-                                <div className="flex-1 space-y-4 mb-8">
-                                    <p className="text-gray-600 text-sm leading-relaxed">
-                                        Not quite perfect? You can refine this image using natural language. Try saying things like:
-                                    </p>
-                                    <ul className="space-y-2">
-                                        {currentSuggestions.map((suggestion, i) => (
-                                            <li
-                                                key={i}
-                                                onClick={() => setEditPrompt(suggestion)}
-                                                className="text-indigo-600 text-sm font-medium bg-indigo-50/50 p-3 rounded-xl cursor-pointer hover:bg-indigo-100 transition-colors border border-indigo-100/50"
-                                            >
-                                                "{suggestion}"
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                <div className="mt-auto">
-                                    {error && (
-                                        <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-xl flex items-center gap-2">
-                                            <AlertCircle className="w-4 h-4 shrink-0" />
-                                            <span>{error}</span>
+                            {/* AI Editor Panel */}
+                            <div className="flex flex-col gap-6 mt-8">
+                                <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 h-full flex flex-col">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <div className="flex items-center gap-2">
+                                            <div className="p-2 bg-amber-50 rounded-lg">
+                                                <Sparkles className="text-amber-600 w-5 h-5" />
+                                            </div>
+                                            <h3 className="text-xl font-bold text-gray-900">AI Refinement Chat</h3>
                                         </div>
-                                    )}
-                                    <div className="relative group">
-                                        <textarea
-                                            value={editPrompt}
-                                            onChange={(e) => setEditPrompt(e.target.value)}
-                                            placeholder="Describe your change..."
-                                            className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 pr-16 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all resize-none min-h-[100px] text-gray-900"
-                                        />
                                         <button
-                                            disabled={isLoading || !editPrompt.trim()}
-                                            onClick={handleEdit}
-                                            className="absolute bottom-4 right-4 p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-lg shadow-indigo-100"
+                                            onClick={handleRefreshSuggestions}
+                                            className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all"
+                                            title="Get new suggestions"
                                         >
-                                            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                                            <RefreshCw className="w-4 h-4" />
                                         </button>
                                     </div>
-                                    <p className="mt-3 text-xs text-gray-400 text-center">
-                                        AI updates usually take 5-10 seconds to process.
-                                    </p>
+
+                                    <div className="flex-1 space-y-4 mb-8">
+                                        <p className="text-gray-600 text-sm leading-relaxed">
+                                            Not quite perfect? You can refine this image using natural language. Try saying things like:
+                                        </p>
+                                        <ul className="space-y-2">
+                                            {currentSuggestions.map((suggestion, i) => (
+                                                <li
+                                                    key={i}
+                                                    onClick={() => setEditPrompt(suggestion)}
+                                                    className="text-indigo-600 text-sm font-medium bg-indigo-50/50 p-3 rounded-xl cursor-pointer hover:bg-indigo-100 transition-colors border border-indigo-100/50"
+                                                >
+                                                    "{suggestion}"
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    <div className="mt-auto">
+                                        {error && (
+                                            <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-xl flex items-center gap-2">
+                                                <AlertCircle className="w-4 h-4 shrink-0" />
+                                                <span>{error}</span>
+                                            </div>
+                                        )}
+                                        <div className="relative group">
+                                            <textarea
+                                                value={editPrompt}
+                                                onChange={(e) => setEditPrompt(e.target.value)}
+                                                placeholder="Describe your change..."
+                                                className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 pr-16 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all resize-none min-h-[100px] text-gray-900"
+                                            />
+                                            <button
+                                                disabled={isLoading || !editPrompt.trim()}
+                                                onClick={handleEdit}
+                                                className="absolute bottom-4 right-4 p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-lg shadow-indigo-100"
+                                            >
+                                                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                                            </button>
+                                        </div>
+                                        <p className="mt-3 text-xs text-gray-400 text-center">
+                                            AI updates usually take 5-10 seconds to process.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -393,8 +462,5 @@ const Home: React.FC = () => {
         </div>
     );
 };
-
-// Import Footer locally to avoid circular dependencies if any
-import { Footer } from '../components/Footer';
 
 export default Home;
