@@ -68,20 +68,13 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({ onCaptur
 
         if (!ctx) return;
 
-        // Set canvas dimensions to a square crop based on the video's smallest dimension
-        const size = Math.min(video.videoWidth, video.videoHeight);
-        canvas.width = size;
-        canvas.height = size;
+        // Capture full frame to allow smartCrop to have maximum context
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
 
-        // Calculate crop to center
-        const sx = (video.videoWidth - size) / 2;
-        const sy = (video.videoHeight - size) / 2;
-
-        // Draw the current video frame to the canvas
+        // Draw the full video frame to the canvas
         // Note: The video preview is mirrored with CSS, but we draw the raw frame here.
-        // If we wanted the captured image to be mirrored as the user sees it, we would need to flip it here.
-        // Requirement said: "Do NOT mirror the final captured image." so we draw as is.
-        ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
+        ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
 
         // Pause video to show "frozen" state
         video.pause();
