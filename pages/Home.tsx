@@ -339,7 +339,7 @@ const Home: React.FC = () => {
                                 {sourceImage && (
                                     <img
                                         src={sourceImage}
-                                        className="w-full h-full object-cover object-center opacity-50 grayscale"
+                                        className="w-full h-full object-cover"
                                         alt="Source"
                                     />
                                 )}
@@ -375,7 +375,7 @@ const Home: React.FC = () => {
                                 {selectedId && (
                                     <img
                                         src={results.find(r => r.id === selectedId)?.url}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-cover object-top rounded-[1.25rem]"
                                         alt="Selected Headshot"
                                     />
                                 )}
