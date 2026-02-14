@@ -333,10 +333,10 @@ const Home: React.FC = () => {
                 )}
 
                 {step === AppStep.GENERATING && (
-                    <div className="w-full max-w-md flex flex-col items-center justify-center py-20 animate-in zoom-in-95 duration-500">
+                    <div className="w-full h-full max-w-md flex flex-col items-center justify-center py-20 animate-in zoom-in-95 duration-500">
                         <div className="relative mb-10">
                             {/* Circular loading preview */}
-                            <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-full border-4 border-indigo-100 flex items-center justify-center overflow-hidden bg-gray-50">
+                            <div className="w-full h-full rounded-full border-4 border-indigo-100 flex items-center justify-center overflow-hidden bg-gray-50">
                                 {sourceImage && (
                                     <img
                                         src={sourceImage}
