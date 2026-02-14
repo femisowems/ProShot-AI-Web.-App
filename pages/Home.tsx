@@ -339,7 +339,7 @@ const Home: React.FC = () => {
                                 {sourceImage && (
                                     <img
                                         src={sourceImage}
-                                        className="h-full w-full object-cover object-center opacity-50 grayscale"
+                                        className="object-cover object-center opacity-50 grayscale"
                                         alt="Source"
                                     />
                                 )}
