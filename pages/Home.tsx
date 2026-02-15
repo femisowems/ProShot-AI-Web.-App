@@ -200,11 +200,11 @@ const Home: React.FC = () => {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col items-center p-4 md:p-8 max-w-6xl mx-auto w-full">
+            <main className="flex-1 flex flex-col items-center px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 max-w-7xl mx-auto w-full">
 
                 {step === AppStep.UPLOAD && (
-                    <div className="w-full max-w-2xl flex flex-col gap-8 animate-in fade-in duration-500">
-                        <div className="text-center space-y-4 py-8 sm:py-16">
+                    <div className="w-full max-w-xl mx-auto flex flex-col gap-8 animate-in fade-in duration-500">
+                        <div className="text-center space-y-4 py-12 sm:py-16 lg:py-20">
                             <h2 className="text-2xl sm:text-4xl font-extrabold text-gray-900 mx-auto max-w-md sm:max-w-none text-balance">Turn Selfies into Professional Headshots</h2>
                             <p className="text-base sm:text-lg text-gray-500 px-4">Get studio-quality photos for LinkedIn, resumes, and social profiles in seconds. No photographer required.</p>
                         </div>
@@ -281,7 +281,7 @@ const Home: React.FC = () => {
                             </div>
                         )}
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                             {HEADSHOT_STYLES.map((style) => (
                                 <div
                                     key={style.id}
@@ -304,11 +304,11 @@ const Home: React.FC = () => {
                                         : 'border-transparent hover:border-indigo-200'
                                         }`}
                                 >
-                                    <img src={style.previewUrl} alt={style.name} className="w-full aspect-square object-cover" />
+                                    <img src={style.previewUrl} alt={style.name} className="w-full aspect-[4/5] object-cover" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
                                     <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
                                         <p className="font-bold text-lg">{style.name}</p>
-                                        <p className="text-xs text-gray-200 line-clamp-1">{style.description}</p>
+                                        <p className="text-xs text-gray-200 line-clamp-2">{style.description}</p>
                                     </div>
                                     {selectedStyle?.id === style.id && (
                                         <div className="absolute top-3 right-3 bg-indigo-600 text-white p-1 rounded-full">
@@ -333,10 +333,10 @@ const Home: React.FC = () => {
                 )}
 
                 {step === AppStep.GENERATING && (
-                    <div className="w-full h-full max-w-md flex flex-col items-center justify-center py-20 animate-in zoom-in-95 duration-500">
+                    <div className="w-full h-full max-w-md flex flex-col items-center justify-center py-12 sm:py-16 lg:py-20 animate-in zoom-in-95 duration-500">
                         <div className="relative mb-10">
                             {/* Circular loading preview */}
-                            <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-full border-4 border-indigo-100 flex items-center justify-center overflow-hidden bg-gray-50">
+                            <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 border-indigo-100 flex items-center justify-center overflow-hidden bg-gray-50">
                                 {sourceImage && (
                                     <img
                                         src={sourceImage}
@@ -453,19 +453,19 @@ const Home: React.FC = () => {
                                                 <span>{error}</span>
                                             </div>
                                         )}
-                                        <div className="relative group">
+                                        <div className="relative group w-full">
                                             <textarea
                                                 value={editPrompt}
                                                 onChange={(e) => setEditPrompt(e.target.value)}
                                                 placeholder="Describe your change..."
-                                                className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 pr-16 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all resize-none min-h-[100px] text-gray-900"
+                                                className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3 py-2 sm:px-4 sm:py-3 pr-14 sm:pr-16 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all resize-none min-h-[100px] text-gray-900"
                                             />
                                             <button
                                                 disabled={isLoading || !editPrompt.trim()}
                                                 onClick={handleEdit}
-                                                className="absolute bottom-4 right-4 p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-lg shadow-indigo-100"
+                                                className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 p-2 sm:p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-lg shadow-indigo-100"
                                             >
-                                                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                                                {isLoading ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : <Send className="w-4 h-4 sm:w-5 sm:h-5" />}
                                             </button>
                                         </div>
                                         <p className="mt-3 text-xs text-gray-400 text-center">

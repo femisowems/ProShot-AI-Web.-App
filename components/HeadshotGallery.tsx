@@ -16,7 +16,7 @@ export const HeadshotGallery: React.FC<HeadshotGalleryProps> = ({ results, selec
     if (!results || results.length === 0) return null;
 
     return (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 w-full">
+        <div className="flex overflow-x-auto gap-3 snap-x sm:grid sm:grid-cols-4 sm:gap-4 w-full pb-4 sm:pb-0">
             {results.map((headshot) => {
                 const isSelected = headshot.id === selectedId;
                 return (
@@ -31,7 +31,7 @@ export const HeadshotGallery: React.FC<HeadshotGalleryProps> = ({ results, selec
                                 onSelect(headshot.id);
                             }
                         }}
-                        className={`relative aspect-[4/5] rounded-xl overflow-hidden cursor-pointer transition-all duration-200 group focus:outline-none focus:ring-4 focus:ring-indigo-100 ${isSelected
+                        className={`relative min-w-[120px] sm:min-w-0 aspect-[4/5] rounded-xl overflow-hidden cursor-pointer transition-all duration-200 group focus:outline-none focus:ring-4 focus:ring-indigo-100 shrink-0 sm:shrink ${isSelected
                             ? 'ring-4 ring-indigo-600 border-2 border-transparent scale-[1.02]'
                             : 'border-2 border-gray-100 hover:border-indigo-200 hover:scale-[1.02]'
                             }`}

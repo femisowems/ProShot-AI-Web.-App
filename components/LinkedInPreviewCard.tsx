@@ -45,7 +45,7 @@ export const LinkedInPreviewCard: React.FC<LinkedInPreviewCardProps> = ({
     return (
         <div className="w-full max-w-3xl mx-auto animate-in slide-in-from-bottom-4 fade-in duration-700">
             {/* Controls Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <div className="flex flex-col gap-4 mb-6">
                 <div className="flex items-center gap-2">
                     <div className="bg-[#0077b5] p-2 rounded-lg text-white">
                         <Linkedin className="w-5 h-5" />
@@ -53,12 +53,12 @@ export const LinkedInPreviewCard: React.FC<LinkedInPreviewCardProps> = ({
                     <h3 className="text-xl font-bold text-gray-900">LinkedIn Preview</h3>
                 </div>
 
-                <div className="flex gap-3 w-full sm:w-auto">
+                <div className="flex flex-col sm:flex-row gap-3 w-full">
                     <button
                         onClick={() => setIsEditing(!isEditing)}
                         className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isEditing
-                                ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                     >
                         <Edit2 className="w-4 h-4" />
@@ -67,7 +67,7 @@ export const LinkedInPreviewCard: React.FC<LinkedInPreviewCardProps> = ({
 
                     <button
                         onClick={handleDownloadCrop}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm w-full sm:w-auto"
                         title="Download cropped 1:1 square image"
                     >
                         <Download className="w-4 h-4" />
